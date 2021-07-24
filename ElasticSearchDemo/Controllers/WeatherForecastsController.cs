@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using ElasticSearchDemo.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -31,7 +30,7 @@ namespace ElasticSearchDemo.Controllers
                 var rng = new Random();
                 if (rng.Next(0, 5) < 2)
                 {
-                    throw new Exception("Oops, what happened!!!");
+                    throw new Exception("An intentional fatal error thrown!!!");
                 }
 
                 var results = Enumerable.Range(1, 5).Select(index => new WeatherForecast
@@ -45,8 +44,9 @@ namespace ElasticSearchDemo.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Server failed");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Server failed");
+                _logger.LogCritical(e, e.Message);
+                // return StatusCode(StatusCodes.Status500InternalServerError, "A fatal error occurred");
+                return UnprocessableEntity(e.Message);
             }
         }
     }

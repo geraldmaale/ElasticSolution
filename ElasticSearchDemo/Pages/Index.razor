@@ -1,7 +1,105 @@
 ﻿@page "/"
+@page "/fetchdata"
+@using ElasticSearchDemo.Data
+@using Newtonsoft.Json
+@inject WeatherForecastService ForecastService
+@inject IHttpClientFactory _clientFactory
 
-<h1>Hello, world!</h1>
+<h3>Weather forecast</h3>
+<hr/>
 
-Welcome to your new app.
+<div class="row">
+    <h5 class="col-sm">Generate Logs for Elastic Search & Kibana</h5>
+    <div class="col-sm ">
+        <button class="btn btn-sm btn-outline-success" @onclick="@RefreshData">Refresh</button>
+    </div>
+</div>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<br/>
+
+@if (hasErrors)
+{
+    <h5 id="error" class="@errorTag">@errorMessage</h5>
+}
+
+@{
+   if (forecasts == null)
+    {
+        <p>
+            <em>Loading...</em>
+        </p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private List<WeatherForecast> forecasts;
+
+    private bool hasErrors;
+
+    string errorTag = String.Empty;
+
+    string errorMessage = String.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData();
+    }
+
+
+    private async Task RefreshData()
+    {
+        await GetData();
+    }
+
+    private async Task GetData()
+    {
+        try
+        {
+            var httpClient = _clientFactory.CreateClient();
+            var response = await httpClient.GetAsync("https://localhost:5001/api/weatherforecasts");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = JsonConvert.DeserializeObject<List<WeatherForecast>>(await response.Content.ReadAsStringAsync());
+                forecasts = content.ToList();
+
+                hasErrors = false;
+                errorTag = String.Empty;
+            }
+            else
+            {
+                hasErrors = true;
+                errorTag = "alert alert-danger";
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception)
+        {
+            hasErrors = true;
+        }
+    }
+
+}

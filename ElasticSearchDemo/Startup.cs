@@ -1,3 +1,4 @@
+using System.Net.Http;
 using ElasticSearchDemo.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,9 +26,13 @@ namespace ElasticSearchDemo
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
 
+            // Register ElasticSearch Settings
             var settings = new ConnectionSettings()
                 .DefaultMappingFor<User>(x=>x.IndexName("users"));
             services.AddSingleton<IElasticClient>(new ElasticClient(settings));
+
+            // Register HttpClientFactory
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
